@@ -1,0 +1,189 @@
+
+# libblank
+
+
+---------------------------------------------------------------------
+## Table of contents
+
+* [Introduction](#introduction)
+* [Quick Start](#quick-start)
+* [Administration](#administration)
+* [Using in your project](#using-in-your-project)
+* [Build Dependencies](#build-dependencies)
+* [Library Dependencies](#library-dependencies)
+* [Extensions](#extensions)
+* [References](#references)
+* [API Reference](annotated.html)
+
+&nbsp;
+
+
+---------------------------------------------------------------------
+## Introduction
+
+Congratulations on your new project **libblank**!
+
+Some things you might want to do...
+
+* Edit this file, **README.md**
+* Edit the project information in **PROJECT.txt**
+* Add functionality to the library in **src/main**
+* Add tests in **src/test**
+
+&nbsp;
+
+
+---------------------------------------------------------------------
+## Quick Start
+
+You can build and install the library using
+
+    $ cmake . -B ./bld  -G "Unix Makefiles"
+    $ cmake --build ./bld
+    $ sudo cmake --install ./bld
+
+View help
+
+    $ libblank help
+
+Cleanup build files
+
+    $ ./clean.sh
+
+Uninstall
+
+    $ sudo libblank uninstall
+
+
+If you prefer to install using a deb package
+
+    $ cpack -B ./pck --config ./bld/CPackConfig.cmake -G DEB -C Release
+    $ sudo apt install ./pck/libblank-0.1.0-Linux.deb
+
+Uninstall deb package
+
+    $ sudo apt remove libblank
+
+
+Run tests in docker image
+
+    $ docker build -t libblank-test -f ./etc/docker-test/Dockerfile .
+
+&nbsp;
+
+
+---------------------------------------------------------------------
+## Administration
+
+Library commands, for once you have it installed
+
+- Display help
+
+    **$ libblank help**
+
+- Uninstall
+
+    **$ sudo libblank uninstall**
+
+- Show installation roots
+
+    **$ libblank files**
+
+- Get installation information.  (Change this info in **PROJECT.txt**)
+
+    **$ libblank info \<variable\>**
+
+    variable = One of [name, description, url, version, build, company, author, lib, include, bin, share]
+
+&nbsp;
+
+
+---------------------------------------------------------------------
+## Using in your project
+
+To Include this library in your project.
+
+    #include <libblank.h>
+
+You also need to add the linker option `-lblank`
+
+If you prefer, you can use pkg-config
+
+    pkg-config --cflags libblank
+    pkg-config --libs libblank
+
+&nbsp;
+
+
+---------------------------------------------------------------------
+## Build Dependencies
+
+### CMake
+
+    apt-get -yq update
+    apt-get -yq install build-essential cmake doxygen
+
+
+### Conan
+
+    apt-get -yq install python3 python3-pip
+    python3 -m pip install conan
+
+&nbsp;
+
+
+---------------------------------------------------------------------
+## Library Dependencies
+
+*NONE*
+
+&nbsp;
+
+
+---------------------------------------------------------------------
+## Extensions
+
+To add extensions, run
+
+    ./add.sh \<extension\>
+
+*Running this command again will restore missing files without overwriting*
+
+
+Available extensions are
+
+Extension     | Description
+------------- | ----------
+conan         | The conan build system.  Installed by default.
+docker        | Support for docker build.
+gradle        | Building with gradle. Gradle support is minimal at this time.
+pip           | Support for pip module
+npm           | Support for making an npm module.
+
+&nbsp;
+
+
+---------------------------------------------------------------------
+## References
+
+- CMake
+    - https://cmake.org
+
+- Conan
+    - https://conan.io
+
+- Docker
+    - https://docs.docker.com
+
+- Gradle
+    - https://gradle.org
+
+- Doxygen
+    - https://www.doxygen.nl
+
+- pip
+    - https://pip.pypa.io/en/stable/
+
+- npm
+    - https://docs.npmjs.com/
+

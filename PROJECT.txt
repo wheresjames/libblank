@@ -1,0 +1,8 @@
+name            libblank
+version         0.1.0
+description     A blank test project
+company         wheresjames
+author          Robert Umbehant
+email           libblank@wheresjames.com
+url             https://github.com/wheresjames/libblank
+license         MIT
