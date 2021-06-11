@@ -29,6 +29,7 @@ Some things you might want to do...
 * Edit the project information in **PROJECT.txt**
 * Add functionality to the library in **src/main**
 * Add tests in **src/test**
+* Add [Extensions](#extensions)
 
 &nbsp;
 
@@ -36,7 +37,32 @@ Some things you might want to do...
 ---------------------------------------------------------------------
 ## Quick Start
 
-You can build and install the library using
+### Windows
+
+---------------------------------------------------------------------
+
+- Install [CMake](https://cmake.org/download/)
+- Install [Visual Studio](https://visualstudio.microsoft.com/downloads/).
+  *The free **Community Edition** is fine*
+
+Build project with cmake
+
+    > cmake . -B ./bld -G "Visual Studio 16 2019"
+    > cmake --build ./bld -j8 --config Release
+
+For the shell scripts below to work, you will need to install the
+[Windows Sybsystem for Linux(WSL)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
+
+When using Windows, do not type ./ before the shell script.
+So for instance, to add the `pip` extension, type...
+
+    > add.sh pip
+
+### Linux
+
+---------------------------------------------------------------------
+
+You can build and install the library with cmake using
 
     $ cmake . -B ./bld  -G "Unix Makefiles"
     $ cmake --build ./bld
@@ -67,7 +93,7 @@ Uninstall deb package
 
 Run tests in docker image
 
-    $ docker build -t libblank-test -f ./etc/docker-test/Dockerfile .
+    $ docker build -t libblank-test -f ./prv/test/Dockerfile .
 
 &nbsp;
 
@@ -124,11 +150,6 @@ If you prefer, you can use pkg-config
     apt-get -yq install build-essential cmake doxygen
 
 
-### Conan
-
-    apt-get -yq install python3 python3-pip
-    python3 -m pip install conan
-
 &nbsp;
 
 
@@ -145,7 +166,7 @@ If you prefer, you can use pkg-config
 
 To add extensions, run
 
-    ./add.sh \<extension\>
+    ./add.sh <extension>
 
 *Running this command again will restore missing files without overwriting*
 
@@ -154,13 +175,156 @@ Available extensions are
 
 Extension     | Description
 ------------- | ----------
-conan         | The conan build system.  Installed by default.
+cmake         | The default cmake files.
+conan         | The conan build system.
 docker        | Support for docker build.
 gradle        | Building with gradle. Gradle support is minimal at this time.
 pip           | Support for pip module
 npm           | Support for making an npm module.
 
 &nbsp;
+
+---------------------------------------------------------------------
+### [CMake](https://cmake.org)
+
+    ./add.sh cmake
+
+This will restore the default cmake project files under `./src`.
+
+#### Configure
+
+    $ cmake . -B ./bld  -G "Unix Makefiles"
+
+#### Build
+
+    $ cmake --build ./bld
+
+#### Install
+
+    $ sudo cmake --install ./bld
+
+#### Uninstall
+
+    $ sudo libblank uninstall
+
+&nbsp;
+
+---------------------------------------------------------------------
+### [Conan](https://conan.io)
+
+    $ ./add.sh conan
+
+Adds support for the Conan packaging system.
+
+#### Install Conan and dependencies on debian
+
+    $ sudo apt-get -yq install python3 python3-pip
+    $ python3 -m pip install conan
+
+#### Configure
+
+    $ conan install .
+
+#### Build
+
+    $ conan build .
+
+#### Make Package
+
+    $ conan package .
+
+#### Install deb package
+
+    $ sudo apt install ./package/libblank-0.1-Linux.deb
+
+#### Uninstall deb package
+
+    $ sudo apt remove libblank
+
+&nbsp;
+
+---------------------------------------------------------------------
+### [Gradle](https://gradle.org)
+
+    $ ./add.sh gradle
+
+*Gradle support is currently minimal, some features are not available, but it should get you started*
+
+#### Configure / build
+
+    $ gradle build
+
+&nbsp;
+
+---------------------------------------------------------------------
+### [Docker](https://docs.docker.com/engine/install)
+
+    $ ./add.sh docker
+
+Adds a basic docker file and setup script.
+
+#### Build
+
+    $ docker build -t libblank
+
+#### Run
+
+    $ docker run -it libblank
+
+&nbsp;
+
+---------------------------------------------------------------------
+### [pip](https://pip.pypa.io/en/stable)
+
+    $ ./add.sh pip
+
+Add support for building python modules and packaging with pip.
+
+#### Install python / pip on debian
+
+    $ sudo apt-get -yq install python3 python3-pip python11-dev
+
+#### Install
+
+    $ pip3 install .
+
+#### Uninstall
+
+    $ pip3 uninstall -y libblank
+
+&nbsp;
+
+---------------------------------------------------------------------
+### [npm](https://docs.npmjs.com)
+
+    $ ./add.sh npm
+
+Adds support for node.js modules and npm packaging system
+
+#### Install node.js and npm on debian
+
+    $ sudo apt install git nodejs npm
+
+The first time you will need to build using cmake to create a package.json file.
+Or you could create one manually
+
+    $ cmake . -B ./bld
+    $ cmake --build ./bld
+
+
+Once you have a package.json file, you can just use npm
+
+#### Build
+
+    $ npm install
+
+#### Build / install locally
+
+    $ npm link
+
+#### Uninstall
+
+    $ npm rm libblank -g
 
 
 ---------------------------------------------------------------------

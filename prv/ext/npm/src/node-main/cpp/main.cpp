@@ -8,11 +8,7 @@
 /// Test function, takes two parameters and returns a string
 std::string sayHello(int x, const std::string &y)
 {
-    std::string s = "Hello, ";
-    s += std::to_string(x);
-    s += ", ";
-    s += y; // std::to_string(y);
-    return s;
+    return std::string("Hello, ") + std::to_string(x) + ", " + y;
 }
 
 /// Test function, takes one parameter and returns it

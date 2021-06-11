@@ -39,8 +39,8 @@ libmycoolstuff.  Customize as you like.
 ---------------------------------------------------------------------
 ## Quick Start
 
-
 ### Windows
+
 ---------------------------------------------------------------------
 
 - Install [CMake](https://cmake.org/download/)
@@ -60,8 +60,8 @@ So for instance, to add the `pip` extension, type...
 
     > add.sh pip
 
-
 ### Linux
+
 ---------------------------------------------------------------------
 
 You can build and install the library with cmake using

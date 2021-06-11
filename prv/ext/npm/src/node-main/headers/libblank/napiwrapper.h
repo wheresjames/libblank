@@ -277,7 +277,7 @@ static Napi::Number cvtV(const Napi::Env &env, long double v)
     { private: c m_c; \
       public: \
         static ClassWrapper_##c* getClassPtr(napi_env env, napi_callback_info info) \
-        {   size_t _argc = 6; napi_value _argv[_argc]; napi_value _this; void* _data = 0; \
+        {   size_t _argc = 6; napi_value _argv[6]; napi_value _this; void* _data = 0; \
             napi_status status = napi_get_cb_info(env, info, &_argc, _argv, &_this, &_data); \
             if ((status) != napi_ok) throw Napi::Error::New(env); \
             if (!_this) throw Napi::Error::New(env); \

@@ -133,9 +133,29 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 if(EXISTS ${CMAKE_SOURCE_DIR}/conanbuildinfo.cmake)
     include(${CMAKE_SOURCE_DIR}/conanbuildinfo.cmake)
     conan_basic_setup()
-else()
-    message(STATUS "Conan not found")
 endif()
+
+
+#====================================================================
+# Just a really useful debugging function
+# https://stackoverflow.com/questions/9298278
+#
+# Example dump_cmake_variables("optional-search-term")
+#
+function(dump_cmake_variables)
+    get_cmake_property(_variableNames VARIABLES)
+    list (SORT _variableNames)
+    foreach (_variableName ${_variableNames})
+        if (ARGV0)
+            unset(MATCHED)
+            string(REGEX MATCH ${ARGV0} MATCHED "${_variableName} ${${_variableName}}")
+            if (NOT MATCHED)
+                continue()
+            endif()
+        endif()
+        message(STATUS " >>>>>>> ${_variableName}=${${_variableName}}")
+    endforeach()
+endfunction()
 
 
 #====================================================================

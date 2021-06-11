@@ -1,9 +1,10 @@
 
 #====================================================================
 
+include(FetchContent)
+
 #--------------------------------------------------------------------
 # Fetch NAPI
-include(FetchContent)
 FetchContent_Declare(
   napi
   GIT_REPOSITORY https://github.com/nodejs/node-addon-api.git
