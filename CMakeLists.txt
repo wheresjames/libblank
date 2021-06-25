@@ -55,8 +55,13 @@ endforeach()
 #====================================================================
 # Options
 set(CMAKE_CXX_STANDARD 17)
-# add_definitions("-std=c++17")
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+# add_compile_options(-D_GLIBCXX_USE_CXX11_ABI=1)
 
+if(UNIX)
+    set(BUILD_SHARED_LIBS ON)
+endif()
 
 #====================================================================
 # Configure
@@ -69,6 +74,12 @@ string(STRIP ${CMAKE_MATCH_1} APPNAME)
 
 string(REGEX MATCH "[\n]version[ \t]*([^\n]*)" _ ${CFGSTR})
 string(STRIP ${CMAKE_MATCH_1} APPVER)
+
+string(REGEX MATCH "([^.]*)" _ ${APPVER})
+string(STRIP ${CMAKE_MATCH_1} APPMAJ)
+
+string(REGEX MATCH "[^.]*\.([^.]*)" _ ${APPVER})
+string(STRIP ${CMAKE_MATCH_1} APPMIN)
 
 string(REGEX MATCH "[\n]description[ \t]*([^\n]*)" _ ${CFGSTR})
 string(STRIP ${CMAKE_MATCH_1} APPDESC)
@@ -90,10 +101,7 @@ string(STRIP ${CMAKE_MATCH_1} APPLICENSE)
 
 if("${APPBUILD}" STREQUAL "")
     string(TIMESTAMP APPBUILD "%y.%m.%d.%H%M")
-endif()
-
-if("${APPBUILD}" STREQUAL "")
-    message(FATAL_ERROR "Invalid APPBUILD: ${APPBUILD}")
+    string(REPLACE ".0" "." APPBUILD ${APPBUILD})
 endif()
 
 
@@ -113,9 +121,6 @@ add_compile_options(-DAPPDESC="${APPDESC}")
 
 #====================================================================
 # Output paths
-
-message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
-
 set(CMAKE_INSTALL_BINDIR bin)
 set(CMAKE_INSTALL_SBINDIR sbin)
 set(CMAKE_INSTALL_LIBEXECDIR bin)
@@ -156,6 +161,13 @@ function(dump_cmake_variables)
         message(STATUS " >>>>>>> ${_variableName}=${${_variableName}}")
     endforeach()
 endfunction()
+
+
+#====================================================================
+# Info
+message(STATUS "---------------------------------------------------")
+message(STATUS "${APPNAME} - ${APPVER} (${APPBUILD})")
+message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
 
 
 #====================================================================
@@ -219,6 +231,33 @@ else()
         configure_file("${CMAKE_SOURCE_DIR}/prv/install/pkgconfig.pc.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"	@ONLY)
         install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc" DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" COMPONENT admin)
     endif()
+endif()
+
+
+#====================================================================
+# CMake package
+if (SKBUILD)
+    message(STATUS "SKBUILD: No cmake package")
+else()
+    include(CMakePackageConfigHelpers)
+    write_basic_package_version_file(
+    "${CMAKE_BINARY_DIR}/${APPNAME}-config-version.cmake"
+    VERSION ${APPVER}
+    COMPATIBILITY AnyNewerVersion
+    )
+
+    configure_file("${CMAKE_SOURCE_DIR}/prv/install/package-config.cmake.in" "${CMAKE_BINARY_DIR}/${APPNAME}-config.cmake" @ONLY)
+
+    set(ConfigPackageLocation lib/cmake/${APPNAME})
+    install(
+    FILES
+        "${CMAKE_BINARY_DIR}/${APPNAME}-config.cmake"
+        "${CMAKE_BINARY_DIR}/${APPNAME}-config-version.cmake"
+    DESTINATION
+        ${ConfigPackageLocation}
+    COMPONENT
+        Devel
+    )
 endif()
 
 

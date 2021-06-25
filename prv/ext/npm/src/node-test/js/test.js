@@ -1,3 +1,4 @@
+#!/usr/bin/node
 
 var assert = require('assert');
 var addon = require('libblank');

@@ -20,6 +20,7 @@
 #
 
 import datetime
+import platform
 from conans import ConanFile, tools, CMake
 
 # Read from config file
@@ -44,9 +45,9 @@ class Library_libblank(ConanFile):
         locals()[k] = cfg[k]
 
     # Create a build number
-    buildno = datetime.datetime.now().strftime("%y.%m.%d.%H%M")
+    buildno = datetime.datetime.now().strftime("%y.%m.%d.%H%M").replace(".0", ".")
 
-    # requires = []
+    # requires = ()
     settings = "os", "compiler", "arch", "build_type"
     options = {}
     default_options = ""
@@ -54,25 +55,39 @@ class Library_libblank(ConanFile):
     generators = "cmake"
     build_policy = "missing"
     build_output = "./bld"
-    install_path = "/usr/local"
+
+    if platform.system() == "Windows":
+        install_path = "C:/Program Files/%s" % cfg['name']
+    else:
+        install_path = "/usr/local"
 
     def conan_info(self):
         self.info.settings.clear()
 
     def configure(self):
-        pass
+        if self.settings.compiler == "gcc":
+            self.settings.compiler.libcxx = "libstdc++11"
 
     def build(self):
-        cmake = CMake(self)
+
+        print("COMPILER: %s %s %s" 
+                % (self.settings.compiler, self.settings.compiler.version, self.settings.compiler.libcxx))
+
+        # https://docs.conan.io/en/latest/reference/build_helpers/cmake.html#definitions
+        cmake = CMake(self, parallel=True)
+        # cmake.verbose = True
+        cmake.definitions["APPBUILD"] = self.buildno
+        cmake.definitions["CMAKE_INSTALL_PREFIX"] = self.install_path
+        cmake.configure(build_dir=self.build_output)
+
         print("cmake.command_line : %s" % cmake.command_line)
         print("cmake.build_config : %s" % cmake.build_config)
-        appopts = "-DAPPBUILD=\"%s\" -DCMAKE_INSTALL_PREFIX=\"%s\"" % (self.buildno, self.install_path)
-        self.run('cmake . -B %s %s %s' % (self.build_output, cmake.command_line, appopts))
-        self.run("cmake --build %s -j 8 %s" % (self.build_output, cmake.build_config))
+
+        cmake.build()
+        # cmake.install()
 
     def package(self):
         self.run('cpack -B ./pck -G DEB -C Release --config %s/CPackConfig.cmake' % self.build_output)
-        #self.copy("*.so")
 
     def package_info(self):
         print(self.package_folder)

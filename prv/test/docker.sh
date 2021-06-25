@@ -38,7 +38,7 @@ installCMake()
     ./bootstrap
     exitOnError "Failed to bootstrap cmake version $CMAKEVER"
 
-    make
+    make -j8
     exitOnError "Failed to build cmake version $CMAKEVER"
 
     make install

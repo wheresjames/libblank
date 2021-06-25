@@ -1,13 +1,39 @@
 #!/bin/bash
 
+# We're here
+IS_RBASHUTILS="YES"
+
 # Root directory
-RBASHUTIL_SCRIPTPATH=$(realpath ${BASH_SOURCE[0]})
-RBASHUTIL_ROOTDIR=$(dirname $RBASHUTIL_SCRIPTPATH)
+if [[ ! -z "${BASH_SOURCE[0]}" ]]; then
+    RBASHUTIL_SCRIPTPATH=$(realpath ${BASH_SOURCE[0]})
+    if [[ ! -z "$RBASHUTIL_SCRIPTPATH" ]]; then
+        RBASHUTIL_ROOTDIR=$(dirname $RBASHUTIL_SCRIPTPATH)
+    else
+        RBASHUTIL_ROOTDIR=.
+    fi
+else
+    RBASHUTIL_ROOTDIR=.
+fi
 if [[ ! -d "$RBASHUTIL_ROOTDIR" ]]; then RBASHUTIL_ROOTDIR="$PWD"; fi
 RBASHUTIL_TOOLPATH="${RBASHUTIL_ROOTDIR}/.tools"
+RBASHUTIL_ONEXIT=
 
 
-# Pads string to the specified number of spaces
+# Creates a build string based on the current timestamp
+# @returns Build string formated as "YY.MM.DD.hhmm"
+createBuildString()
+{
+    local T=(`bash -c "date +'%y %m %d %H %M'"`)
+
+    # Remove leading zeros
+    for i in ${!T[@]}; do
+        T[$i]=$((10#${T[$i]}))
+    done
+
+    echo "${T[0]}.${T[1]}.${T[2]}.$((100 * ${T[3]} + ${T[4]}))"
+}
+
+# Pads string to the specified number of characters
 # @param [in] string - String to pad
 # @param [in] int    - Length to pad string
 # @param [in] char   - Padding character
@@ -23,23 +49,67 @@ padStr()
     echo "$S1"
 }
 
+# Left pads string to the specified number of characters
+# @param [in] string - String to pad
+# @param [in] int    - Length to pad string
+# @param [in] char   - Padding character
+padStrLeft()
+{
+    local S1="$1"
+    local LN=$2
+    local PD="$3"
+    if [[ -z $PD ]]; then PD=' '; fi
+    while ((${#S1} < $LN)); do
+        S1="${PD}${S1}"
+    done
+    echo "$S1"
+}
+
+# Limits string length to specified length
+# @param [in] string - String to limit
+# @param [in] int    - Length to limit string
+# @param [in] string - Ending string
+limitStr()
+{
+    local S1="$1"
+    local LN=$2
+    local END="$3"
+    if [[ -z "$END" ]]; then END='...'; fi
+
+    local LIM=$(($LN - ${#END}))
+    if [[ ${#S1} -gt $LIM ]]; then
+        S1="${S1:0:$LIM}${END}"
+    fi
+    echo "$S1"
+}
+
+
+
 # Put a border around a string
 # @param [in]    char   - Character to make the box from
 # @param [in...] string - String that goes in the box
 boxStr()
 {
-    if [[ 1 -lt ${#@} ]]; then
+    local BCHR='-'
+    local SCHR='|'
 
-        local CHR=$1
+    if [[ ${#1} -eq 1 ]]; then
+        BCHR=$1
+        SCHR=$1
         shift
-        local STR="${@}"
-        local BORDERLEN=$((${#STR}+4))
-        local BORDERSTR=$(padStr "$CHR" $BORDERLEN "$CHR")
-
-        echo "$BORDERSTR"
-        echo -e "$CHR ${STR} $CHR"
-        echo "$BORDERSTR"
+    elif [[ ${#1} -eq 2 ]]; then
+        BCHR=${1:0:1}
+        SCHR=${1:1:1}
+        shift
     fi
+
+    local STR="${@}"
+    local BORDERLEN=$((${#STR}+4))
+    local BORDERSTR=$(padStr "$BCHR" $BORDERLEN "$BCHR")
+
+    echo "$BORDERSTR"
+    echo -e "$SCHR ${STR} $SCHR"
+    echo "$BORDERSTR"
 }
 
 
@@ -48,8 +118,20 @@ boxStr()
 # @param [in...] string - Script variable(s)
 showVars()
 {
-    local BCHR=$1
-    shift
+    local BCHR='-'
+    local SCHR='|'
+    local MAXK=30
+    local MAXV=80
+
+    if [[ ${#1} -eq 1 ]]; then
+        BCHR=$1
+        SCHR=$1
+        shift
+    elif [[ ${#1} -eq 2 ]]; then
+        BCHR=${1:0:1}
+        SCHR=${1:1:1}
+        shift
+    fi
 
     local VARLEN=4
     local VALLEN=4
@@ -57,18 +139,19 @@ showVars()
     for var in "$@"; do
         local VAL=${!var}
         if [[ ${#VAL} -gt $VALLEN ]]; then VALLEN=${#VAL}; fi
+        if [[ $MAXV -lt $VALLEN ]]; then VALLEN=$MAXV; fi
         if [[ ${#var} -gt $VARLEN ]]; then VARLEN=${#var}; fi
+        if [[ $MAXK -lt $VARLEN ]]; then VARLEN=$MAXK; fi
     done
 
     local BORDERLEN=$(($VARLEN+$VALLEN+7))
-    # if [[ $BORDERLEN -gt 100 ]]; then BORDERLEN=100; fi
     local BORDERSTR=$(padStr "$BCHR" $BORDERLEN "$BCHR")
 
     echo "$BORDERSTR"
     for var in "$@"; do
-        local S1=$(padStr "$var" $VARLEN)
-        local S2=$(padStr "${!var}" $VALLEN)
-        echo "$BCHR $S1 : $S2 $BCHR"
+        local S1=$(padStr "$(limitStr "$var" $MAXK)" $VARLEN)
+        local S2=$(padStr "$(limitStr "${!var}" $MAXV)" $VALLEN)
+        echo "$SCHR $S1 : $S2 $SCHR"
     done
     echo "$BORDERSTR"
 }
@@ -87,6 +170,15 @@ showBanner()
         echo -e "[\e[1;36mINFO\e[1;0m] \e[1;36m${@}\e[1;0m"
         echo $BORDERSTR
         echo
+    fi
+}
+
+# Show low visibility information
+# @param [in...] string
+showNotice()
+{
+    if [[ 0 -lt ${#@} ]]; then
+        echo -e "[\e[1;36m\e[1;2mNOTE\e[1;0m] \e[1;36m\e[1;2m${@}\e[1;0m"
     fi
 }
 
@@ -135,10 +227,21 @@ showError()
     fi
 }
 
+# Sets the function to call on exit
+# @param [in] function - Function to call on exit
+onExit()
+{
+    RBASHUTIL_ONEXIT=$1
+}
+
 # Exits script
 # @param [in] int - Exit code
 doExit()
 {
+    if [ ! -z $RBASHUTIL_ONEXIT ]; then
+        $RBASHUTIL_ONEXIT $@
+    fi
+
     echo
     exit $1
 }
@@ -227,6 +330,12 @@ setCmd()
     RBASHUTIL_COMMANDLIST=$1
 }
 
+# Returns the command list
+getCmds()
+{
+    echo "$RBASHUTIL_COMMANDLIST"
+}
+
 # Checks the variable *$COMMANDLIST* for the specified command
 # @param [in] string - Command to search for
 #
@@ -264,20 +373,32 @@ delCmd()
 # @returns 0 if sub string is found
 findInStr()
 {
-    local FIND_LIST=$1
-    local FIND_EXISTS=$(echo $FIND_LIST | grep -o $2)
+    local FIND_LIST="$1"
+    local FIND_EXISTS=$(echo "$FIND_LIST" | grep -o "$2")
     if [[ ! -z $FIND_EXISTS ]]; then return 0; fi
     return -1
 }
 
 # Executes a command and searches for a sub string in the output
-# @param [in] string - Command to execute
+# @param [in] string - Command to execute (must not contain %)
 # @param [in] string - Sub string to search for
 # @returns 0 if sub string is found
 findIn()
 {
-    findInStr "$($1 2>&1)" $2
+    local CMD=
+    local RESULT=
+    local CMDLIST=(${1// /%})
+    local CMDLIST=(${CMDLIST//|/ })
+    for CMD in "${CMDLIST[@]}";do
+        CMD="${CMD//%/ }"
+        RESULT=$($CMD <<< "$RESULT")
+    done
+    findInStr "$RESULT" $2
     return $?
+
+    # Doesn't handle pipes
+    # findInStr "$($1 2>&1)" $2
+    # return $?
 }
 
 # Searches a multi line string for a line matching the specfied regex
@@ -315,15 +436,35 @@ isCommand()
     return 0
 }
 
+# Checks if the specified package is installed
+isAptPkgInstalled()
+{
+    if findIn "dpkg --get-selections" $1; then return 0; else return -1; fi
+}
+
 # Checks that the specified pacakge(s) is installed, installs if not
 # @param [in] string - List of packages
 # @notes Exits on failure
 aptInstall()
 {
-    if ! findIn "apt list --installed" $1; then
-        apt-get -y install $1
-        exitOnError "Unable to install $1"
+    local QUIET=
+    if [[ "-q" == "$1" ]]; then
+        QUIET="YES"
+        shift
     fi
+
+    for PKG in "$@";do
+        # if findIn "dpkg --get-selections" $PKG; then
+        if isAptPkgInstalled "$PKG"; then
+            if [ -z "$QUIET" ]; then
+                showNotice "[x] Already installed: $PKG"
+            fi
+        else
+            showInfo "Installing $PKG..."
+            apt-get -yq install $PKG
+            exitOnError "Failed to install $PKG"
+        fi
+    done
 }
 
 # Checks for the specified apt repository
@@ -360,7 +501,7 @@ doIf()
     findInStr "$($1 2>&1)" $2
     if [[ 0 -ne $? ]]; then return 0; fi
     $3
-    if [[ ! -z $4 ]]; then
+    if [[ ! -z "$4" ]]; then
         exitWithError $4
     fi
 }
@@ -377,10 +518,48 @@ doIfNot()
     findInStr "$($1 2>&1)" $2
     if [[ 0 -eq $? ]]; then return 0; fi
     $3
-    if [[ ! -z $4 ]]; then
+    if [[ ! -z "$4" ]]; then
         exitWithError $4
     fi
 }
+
+# Executes a second command if the first command fails
+# @param [in]       - First command to execute
+# @param [in]       - Second command to execute if the first fails
+# @param [in,opt]   - Message to display on error
+doIfFail()
+{
+    local E=$?
+    if [ ! -z "$1" ]; then
+        $1
+        E=$?
+    fi
+    if [[ 0 -ne $E ]]; then
+        if [ ! -z "$3" ]; then
+            echo "$3"
+        fi
+        $2
+    fi
+}
+
+
+# Executes a second command if the first command fails and exits
+# @param [in]       - First command to execute
+# @param [in]       - Second command to execute if the first fails
+# @param [in,opt]   - Message to display on error
+doIfFailAndExit()
+{
+    local E=$?
+    if [ ! -z "$1" ]; then
+        $1
+        E=$?
+    fi
+    if [[ 0 -ne $E ]]; then
+        $2
+        exitWithError $3
+    fi
+}
+
 
 # Waits while a sub string appears in a commands output
 # @param [in] string - Command to execute
@@ -404,7 +583,7 @@ waitWhile()
     while findIn "$1" "$2"; do
 
         # Retries?
-        local WAITRETRY=$((WAITRETRY-1))
+        WAITRETRY=$((WAITRETRY-1))
         if [ $WAITRETRY -le 0 ]; then
             return -1
         fi
@@ -440,7 +619,7 @@ waitUntil()
     while ! findIn "$1" "$2"; do
 
         # Retries?
-        local WAITRETRY=$((WAITRETRY-1))
+        WAITRETRY=$((WAITRETRY-1))
         if [ $WAITRETRY -le 0 ]; then
             return -1
         fi
@@ -539,6 +718,29 @@ findFile()
     echo "$FINDFILE"
 }
 
+# Searches current and parent directories for the specified file
+# @param [in] string    - Directory to start in
+# @param [in] string    - File name to search for
+# @returns The first path containing the file or empty string
+findParentWithFile()
+{
+    local DIR=$1
+    local FILE=$2
+
+    # Find project folder
+    local SEARCH="$DIR"
+    while [[ ! -f "${SEARCH}/${FILE}" ]] && [[ 1 -lt ${#SEARCH} ]]; do
+        SEARCH=$(dirname $SEARCH)
+    done
+
+    if [[ ! -f "${SEARCH}/${FILE}" ]]; then
+        SEARCH=
+    fi
+
+    echo "${SEARCH}"
+}
+
+
 # Creates a random password
 # @param [in] int    - Password length
 # @param [in] string - Password name
@@ -576,7 +778,9 @@ getPassword()
         fi
 
         PWDFILE="${PWDPATH}/$PWDNAME.pwd"
-        if [[ -f $PWDFILE ]]; then
+        if [[ ! -z $NEWPASSWORD ]]; then
+            rm "$PWDFILE"
+        elif [[ -f $PWDFILE ]]; then
             PASSWORD=$(<${PWDFILE})
         fi
     fi
@@ -736,3 +940,169 @@ assertVersion()
         exitWithError "'$1' $3 '$2'"
     fi
 }
+
+# Recursively counts the files in the specified directory
+# @param [in] string    - Directory containing files to count
+# @param [in] string    - Non-zero to count directories as well
+# @returns Number of files in specified directory
+countFiles()
+{
+    local DIR=$1
+    local CNTDIRS=$2
+    if [ ! -d "$DIR" ]; then
+        echo "0"
+        return 0
+    fi
+
+    local COUNT=0
+    local FILES=$DIR/*
+    for SRC in $FILES
+    do
+        # Empty
+        if [[ $SRC =~ "*" ]]; then
+            continue
+        fi
+
+        #Directory
+        if [[ -d "$SRC" ]]; then
+            MORE=$(countFiles "$SRC")
+            if [ ! -z "$CNTDIRS" ]; then
+                COUNT=$(($COUNT+$MORE+1))
+            else
+                COUNT=$(($COUNT+$MORE+1))
+            fi
+
+        # File
+        else
+            COUNT=$(($COUNT+1))
+        fi
+
+    done
+
+    echo "$COUNT"
+}
+
+# Iterate files in a given directory
+# @param [in] func   - Function to call for each file / directory
+# @param [in] string - Directory to iterate
+# @param [internal]  - Total number of files in directory
+# @param [internal]  - Current file count
+iterateFiles()
+{
+    local FN=$1
+    local DIR=$2
+    local TOT=$3
+    local CNT=$4
+
+    if [ ! -d "$DIR" ]; then
+        return -1
+    fi
+
+    if [ -z "$TOT" ]; then
+        TOT=$(countFiles "$DIR" YES)
+        CNT="RBASHUTILS_ITTRCOUNT_$(getPassword 8)"
+        declare -g $CNT=0
+    fi
+
+    local FILES=$DIR/*
+    for SRC in $FILES
+    do
+        # Empty
+        if [[ $SRC =~ "*" ]]; then
+            continue
+        fi
+
+        local PROG="[ -- ]"
+        declare -g $CNT=$((${!CNT}+1))
+        if [[ 0 -lt $TOT ]]; then
+            local PERCENT=$((${!CNT} * 100 / $TOT))
+            if [[ 0 -gt $PERCENT ]]; then PERCENT=0;
+            elif [[ 100 -lt $PERCENT ]]; then PERCENT=100; fi
+            PROG="[$(padStrLeft "$PERCENT" 3)%]"
+        fi
+
+        # Directory
+        if [[ -d "$SRC" ]]; then
+            $FN "$SRC" "$PROG"
+            iterateFiles $FN "$SRC" $TOT $CNT
+
+        # Files
+        else
+            $FN "$SRC" "$PROG"
+        fi
+    done
+}
+
+# Returns 0 if the cert is valid for the specified number of days
+# @param [in] string    - Domain name to check
+# @param [in] int       - Number of days (default is 1)
+isCertValid()
+{
+    local DOMAIN=$1
+    local DAYS=$2
+
+    if [[ -z "$DAYS" ]] || [[ 0 -eq $DAYS ]]; then
+        DAYS=1
+    fi
+    local SECS=$(($DAYS * 24 * 60 * 60))
+
+    CERTRAW=$(openssl s_client -connect ${DOMAIN}:443 -servername ${DOMAIN} 2>/dev/null </dev/null)
+    if [ -z "$CERTRAW" ]; then
+        return -1;
+    fi
+
+    CERTTXT=$(echo "${CERTRAW}" | openssl x509 -in /dev/stdin -noout -checkend $SECS)
+    if findInStr "$CERTTXT" "Certificate will not expire"; then
+        return 0;
+    fi
+
+    return -1;
+}
+
+
+# Returns issue / expire info from certificate
+# @param [in] string - Domain name
+# @param [in] option - Which time (can be both) [start, end]
+# @param [in] option - Format [text, timestamp]
+getCertTime()
+{
+    local DOMAIN=$1
+    local WHICH=$2
+    local FORMAT=$3
+    local RET=
+
+    local CERTRAW=$(openssl s_client -connect ${DOMAIN}:443 -servername ${DOMAIN} 2>/dev/null </dev/null)
+    if [ -z "$CERTRAW" ]; then
+        return -1;
+    fi
+
+    # Start time
+    if findInStr "$WHICH" "start"; then
+        local CERTTXT=$(echo "${CERTRAW}" | openssl x509 -in /dev/stdin -noout -startdate)
+        if findInStr "$CERTTXT" "notBefore="; then
+            if [[ "timestamp" == "$FORMAT" ]]; then
+                RET="$(date --date="${CERTTXT:10}" +"%s")"
+            else
+                RET="${CERTTXT:10}"
+            fi
+        fi
+    fi
+
+    # End time
+    if findInStr "$WHICH" "end"; then
+        local CERTTXT=$(echo "${CERTRAW}" | openssl x509 -in /dev/stdin -noout -enddate)
+        if findInStr "$CERTTXT" "notAfter="; then
+            if [ ! -z "$RET" ]; then
+                RET="$RET : "
+            fi
+            if [[ "timestamp" == "$FORMAT" ]]; then
+                RET="${RET}$(date --date="${CERTTXT:9}" +"%s")"
+            else
+                RET="${RET}${CERTTXT:9}"
+            fi
+        fi
+    fi
+
+    echo "${RET}"
+}
+

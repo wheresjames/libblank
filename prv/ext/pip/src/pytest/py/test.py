@@ -61,11 +61,15 @@ def runTests(_p):
 
     # Module attributes
     print(dir(libblank))
+
+    # for k in dir(libblank):
+    #     print("%s = %s" % (k, getattr(libblank, k)))
+
     print("[%s] %s" % (libblank.__name__, libblank.__file__))
 
     # Show version number
     print("libblank version : %s [%s]" % (libblank.__version__, libblank.__build__))
-    assert libblank.__version__ == "0.1.0"
+
 
     pt = libblank.pytest()
 

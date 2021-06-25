@@ -1,9 +1,10 @@
 
 #====================================================================
-
+# Includes
 include(FetchContent)
 
-#--------------------------------------------------------------------
+
+#====================================================================
 # Fetch NAPI
 FetchContent_Declare(
   napi
@@ -14,20 +15,28 @@ FetchContent_MakeAvailable(napi)
 include_directories("${napi_SOURCE_DIR}" "${napi_SOURCE_DIR}/src")
 
 
-#--------------------------------------------------------------------
-# Output
+#====================================================================
 set(BINARY ${PROJECT_NAME})
+
+
+#====================================================================
+# Library
 
 # Include
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/headers")
 
 # Source files
-file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true "${CMAKE_CURRENT_SOURCE_DIR}/cpp/*.cpp")
+file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/cpp/*.cpp")
 
-add_library(${BINARY} SHARED ${SOURCES})
-set_target_properties(${BINARY} PROPERTIES PREFIX "" SUFFIX ".node")
+add_library(${BINARY} MODULE ${SOURCES})
+set_target_properties(${BINARY} PROPERTIES PREFIX "")
+set_target_properties(${BINARY} PROPERTIES SUFFIX ".node")
+set_target_properties(${BINARY} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+
+#====================================================================
 # Install
+
 install(TARGETS ${BINARY} DESTINATION lib COMPONENT lib)
 
 # Package file
@@ -42,10 +51,12 @@ file(COPY "${CMAKE_BINARY_DIR}/package.json" DESTINATION "${CMAKE_SOURCE_DIR}")
 
 # Copy target for testing
 add_custom_command(TARGET ${BINARY} POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/lib/${PROJECT_NAME}.node"
-                           "${CMAKE_BINARY_DIR}/lib/node_modules/${PROJECT_NAME}/bin/${PROJECT_NAME}.node")
+                   COMMAND ${CMAKE_COMMAND} -E copy 
+                        "$<TARGET_FILE:${BINARY}>"
+                        "${CMAKE_BINARY_DIR}/lib/node_modules/${PROJECT_NAME}/bin/$<TARGET_FILE_NAME:${BINARY}>")
 
 # Copy for npm installation
 add_custom_command(TARGET ${BINARY} POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/lib/${PROJECT_NAME}.node"
-                           "${CMAKE_SOURCE_DIR}/bin/${PROJECT_NAME}.node")
+                   COMMAND ${CMAKE_COMMAND} -E copy 
+                        "$<TARGET_FILE:${BINARY}>"
+                        "${CMAKE_SOURCE_DIR}/bin/$<TARGET_FILE_NAME:${BINARY}>")

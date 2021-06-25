@@ -149,7 +149,7 @@ If you prefer, you can use pkg-config
 ### CMake
 
     apt-get -yq update
-    apt-get -yq install build-essential cmake doxygen
+    apt-get -yq install build-essential git cmake doxygen graphviz go-md2man
 
 
 &nbsp;
@@ -289,6 +289,14 @@ Add support for building python modules and packaging with pip.
 #### Install
 
     $ pip3 install .
+
+#### Create wheel
+
+    $ python3 setup.py bdist_wheel
+
+OR
+
+    $ pip3 wheel . --use-feature=in-tree-build
 
 #### Uninstall
 

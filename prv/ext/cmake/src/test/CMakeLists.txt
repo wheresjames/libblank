@@ -6,15 +6,17 @@ set(BINARY ${PROJECT_NAME}-test)
 
 include_directories("${CMAKE_SOURCE_DIR}/src/main/headers")
 
-file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true "cpp/*.cpp")
+file(GLOB_RECURSE SOURCES "cpp/*.cpp")
 
 add_executable(${BINARY} ${SOURCES})
 
 target_link_libraries(${BINARY} PRIVATE ${PROJECT_NAME})
 
 if(UNIX)
-    target_link_libraries(${BINARY} PRIVATE "-lpthread -lrt")
+    target_link_libraries(${BINARY} PRIVATE pthread rt)
 endif()
+
+set_target_properties(${BINARY} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 enable_testing()
 add_test(NAME ${BINARY} COMMAND ${BINARY})

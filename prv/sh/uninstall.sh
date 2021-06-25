@@ -82,6 +82,9 @@ for v in $FILES; do
     elif [ -f "$v" ]; then
         STATUS="-"
         rm "$v"
+    elif [ -L "$v" ]; then
+        STATUS="%"
+        rm "$v"
     elif [ -d "$v" ]; then
         STATUS="!"
         rm -Rf "$v"

@@ -6,6 +6,7 @@ from __future__ import print_function
 
 # from setuptools import setup
 from skbuild import setup
+import platform
 
 def readConfig(fname):
     cfg = {}
@@ -27,4 +28,5 @@ setup(
     author=cfg['author'],
     author_email=cfg['email'],
     license=cfg['license'],
+    # cmake_args=['-DPYVER==%s' % platform.python_version()],
 )

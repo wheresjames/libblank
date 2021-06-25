@@ -23,7 +23,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Install Build Dependencies
 RUN \
        apt-get -yq update \
-    && apt-get -yq install wget build-essential cmake doxygen graphviz ronn
+    && apt-get -yq install wget build-essential nano git cmake doxygen graphviz go-md2man ronn
 
 # Install a web browser to view help file (libblank help)
 # RUN apt-get -yq install lynx
