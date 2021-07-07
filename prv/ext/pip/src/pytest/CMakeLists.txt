@@ -1,45 +1,11 @@
 
 #====================================================================
-set(TARGET ${PROJECT_NAME}-test)
-set(BINARY ${CMAKE_BINARY_DIR}/lib/test.py)
+include(../python.cmake)
 
 
 #====================================================================
-# Must have python
-
-set(NEWPY "YES")
-
-if("${PYVER}" STREQUAL "")
-    set(PYVER "=${PYTHON_VERSION_STRING}")
-endif()
-
-if(${PYVER} MATCHES "=")
-    string(REPLACE "=" "" PYVER "${PYVER}")
-    if(NOT "${PYVER}" STREQUAL "")
-        set(PYEQ "EXACT")
-    endif()    
-endif()
-
-message(STATUS "[INFO] PYVER: ${PYVER}, PYEQ: ${PYEQ}, NEWPY: ${NEWPY}")
-
-if(${NEWPY})
-    find_package (Python3 ${PYVER} ${PYEQ} COMPONENTS Interpreter Development)
-    if(NOT Python3_FOUND OR NOT Python3_Development_FOUND)
-        if("${PYEQ}" STREQUAL "")
-            message(FATAL_ERROR "Python not found : ${PYVER}")
-        else()
-            message(STATUS "!!!! Exact Python version not found : ${PYVER}")
-            find_package (Python3 COMPONENTS Interpreter Development)
-            if(NOT Python3_FOUND OR NOT Python3_Development_FOUND)
-                message(FATAL_ERROR "Python not found : ${PYVER}")
-            endif()
-        endif()
-    endif()
-    set(PYEXE ${Python3_EXECUTABLE})
-else()
-    find_package(PythonExtensions REQUIRED)
-    set(PYEXE ${PYTHON_EXECUTABLE})
-endif()
+set(TARGET ${PROJECT_NAME}-test)
+set(BINARY ${PROJECT_BINARY_DIR}/lib/test.py)
 
 
 #====================================================================
@@ -49,7 +15,7 @@ add_custom_target(${TARGET} ALL
 
 enable_testing()
 add_test(NAME ${TARGET}
-            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+            WORKING_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
             COMMAND ${PYEXE} ${BINARY})
 
 set_tests_properties(${TARGET} PROPERTIES TIMEOUT 10)

@@ -75,6 +75,9 @@ if [[ $1 == "test-cmake" ]]; then
 
     ./clean.sh
 
+    ./add.sh cmake -y
+    exitOnError "test-cmake: Failed to add cmake to project"
+
     cmake . -B ./bld -G "Unix Makefiles"
     exitOnError "test-cmake: Failed to configure"
 
