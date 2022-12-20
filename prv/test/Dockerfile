@@ -38,7 +38,7 @@ ENV DOCKERSCRIPT /code/libblank/prv/test/docker.sh
 
 #--------------------------------------------------------------------
 # Ensure we have a minimum cmake version
-RUN ${DOCKERSCRIPT} check-cmake "3.15" "3.20"
+RUN ${DOCKERSCRIPT} check-cmake "3.15" "release"
 
 #--------------------------------------------------------------------
 # CMake build

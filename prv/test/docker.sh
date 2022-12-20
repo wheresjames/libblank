@@ -26,14 +26,11 @@ installCMake()
     mkdir -p /code/cmake
     cd /code/cmake
 
-    wget https://github.com/Kitware/CMake/releases/download/v${CMAKEVER}/cmake-${CMAKEVER}.tar.gz
-    exitOnError "Failed to download cmake version $CMAKEVER"
+    git clone https://github.com/Kitware/CMake.git ./
+    exitOnError "Failed to clone cmake"
 
-    tar xvzf ./cmake-${CMAKEVER}.tar.gz
-    exitOnError "Failed to extract cmake version $CMAKEVER"
-
-    cd cmake-${CMAKEVER}
-    exitOnError "Failed to cd cmake version $CMAKEVER"
+    git checkout $CMAKEVER
+    exitOnError "Failed to checkout tag : $CMAKEVER"
 
     ./bootstrap
     exitOnError "Failed to bootstrap cmake version $CMAKEVER"
